@@ -172,7 +172,8 @@ body.idle .top,body.idle .dock{opacity:.12}
 
 .embed-wrap{
   position:relative;
-  width:min(560px,100%);padding:4px;
+  display:flex;align-items:center;gap:2px;
+  width:min(460px,100%);padding:4px;
   border-radius:16px;
   background:var(--glass);border:1px solid var(--stroke);
   backdrop-filter:blur(22px) saturate(1.2);
@@ -180,7 +181,23 @@ body.idle .top,body.idle .dock{opacity:.12}
   box-shadow:0 18px 46px rgba(0,0,0,.42);
   transition:opacity .35s ease,transform .35s ease;
 }
-.embed{display:block;width:100%;height:152px;border:0;border-radius:12px}
+.embed-host{flex:1;min-width:0}
+.embed-host iframe{display:block;width:100%;border:0;border-radius:12px}
+.embed{display:block;width:100%;height:80px;border:0;border-radius:12px}
+
+.nav{
+  display:grid;place-items:center;flex:none;
+  width:30px;height:30px;border:0;border-radius:50%;
+  background:transparent;color:var(--muted);cursor:pointer;
+  transition:color .18s,background .18s;
+}
+.nav:hover{color:var(--ink);background:rgba(255,255,255,.08)}
+.nav:focus-visible{outline:2px solid rgba(255,255,255,.45);outline-offset:2px}
+
+/* the fallback playlist embed is taller and needs no prev/next */
+.embed-wrap.plain{width:min(560px,100%)}
+.embed-wrap.plain .nav{display:none}
+.embed-wrap.plain .embed-host iframe{height:152px}
 
 .collapse{
   position:absolute;top:-11px;right:-11px;

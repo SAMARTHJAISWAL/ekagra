@@ -34,6 +34,10 @@ const CONFIG = {
   // Text on the collapsed pill that opens the player.
   launchLabel : "sitar for focus",
 
+  // "tracks"   — one song at a time, our own prev/next, no playlist chrome
+  // "playlist" — Spotify's playlist card, queue and title row included
+  playerStyle : "tracks",
+
   startVolume : 0.8,
 };
 
@@ -110,58 +114,122 @@ const mmss = (s) => {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) v.pause();
 })();
 
-/* ───────────────────────── spotify embed mode ─────────────────────────
-   Spotify's playlist embed has a minimum height and draws its own queue,
-   which fights the artwork. So it starts collapsed as a small glass pill
-   and expands into the real card on click — the iframe isn't even created
-   until then, so nothing loads from Spotify unless someone asks for it. */
+/* ───────────────────────── spotify mode ─────────────────────────
+   A *playlist* embed always draws its own queue and its own title row.
+   A *track* embed draws just the song. So we play one track at a time and
+   move through playlist.js ourselves, using Spotify's official IFrame API
+   so playback carries across the change instead of stopping dead.
+
+   Starts collapsed as a pill — the iframe isn't created until someone
+   clicks, so nothing loads from Spotify unless a visitor wants sound. */
 if (CONFIG.mode === "spotify") {
   const dock = document.querySelector(".dock");
   $("player").remove();
 
-  const stage = document.createElement("div");
-  stage.className = "stage";
+  const tracks = ((window.PLAYLIST && window.PLAYLIST.tracks) || []).filter((t) => t.id);
+  let idx = 0, ctl = null, mounted = false, advancing = false;
 
-  const launch = document.createElement("button");
-  launch.className = "launch";
+  const el = (tag, cls, html) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html) n.innerHTML = html;
+    return n;
+  };
+  const ICON = {
+    play : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>',
+    prev : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M7 6h2v12H7V6Zm10 0v12l-8-6 8-6Z"/></svg>',
+    next : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M15 6h2v12h-2V6ZM7 6l8 6-8 6V6Z"/></svg>',
+    down : '<svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M6.4 7.8 12 13.4l5.6-5.6 1.4 1.4-7 7-7-7 1.4-1.4Z"/></svg>',
+  };
+
+  const stage  = el("div", "stage");
+  const launch = el("button", "launch", ICON.play + "<span>" + (CONFIG.launchLabel || "play") + "</span>");
   launch.type = "button";
-  launch.innerHTML =
-    '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">' +
-    '<path fill="currentColor" d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>' +
-    '<span>' + (CONFIG.launchLabel || "play") + '</span>';
 
-  const wrap = document.createElement("div");
-  wrap.className = "embed-wrap";
-
-  const close = document.createElement("button");
-  close.className = "collapse";
-  close.type = "button";
-  close.setAttribute("aria-label", "Hide player");
-  close.innerHTML =
-    '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">' +
-    '<path fill="currentColor" d="M6.4 7.8 12 13.4l5.6-5.6 1.4 1.4-7 7-7-7 1.4-1.4Z"/></svg>';
-
+  const wrap = el("div", "embed-wrap");
+  const prev = el("button", "nav", ICON.prev);
+  const next = el("button", "nav", ICON.next);
+  const host = el("div", "embed-host");
+  const shutBtn = el("button", "collapse", ICON.down);
+  [prev, next, shutBtn].forEach((b) => (b.type = "button"));
+  prev.setAttribute("aria-label", "Previous track");
+  next.setAttribute("aria-label", "Next track");
+  shutBtn.setAttribute("aria-label", "Hide player");
+  wrap.append(prev, host, next, shutBtn);
   stage.append(launch, wrap);
   dock.prepend(stage);
 
-  const open = () => {
-    if (!wrap.querySelector("iframe")) {
-      const frame = document.createElement("iframe");
-      frame.className = "embed";
-      frame.src = "https://open.spotify.com/embed/playlist/" +
-                  CONFIG.spotifyEmbedId + "?utm_source=generator&theme=0";
-      frame.title = "Spotify player";
-      frame.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
-      frame.setAttribute("frameborder", "0");
-      wrap.append(frame, close);
-    }
-    document.body.classList.add("open-player");
-  };
+  /* If the IFrame API can't load, fall back to the plain playlist embed —
+     less pretty, but it always works. */
+  function fallback() {
+    if (ctl) return;
+    wrap.classList.add("plain");
+    host.innerHTML = "";
+    const f = el("iframe", "embed");
+    f.src = "https://open.spotify.com/embed/playlist/" + CONFIG.spotifyEmbedId +
+            "?utm_source=generator&theme=0";
+    f.title = "Spotify player";
+    f.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+    f.setAttribute("frameborder", "0");
+    host.append(f);
+  }
+
+  function go(step) {
+    if (!ctl || !tracks.length) return;
+    idx = (idx + step + tracks.length) % tracks.length;
+    ctl.loadUri("spotify:track:" + tracks[idx].id);
+    setTimeout(() => ctl.play(), 500);   // loadUri needs a beat before play takes
+  }
+
+  function mount() {
+    if (mounted) return;
+    mounted = true;
+
+    if (!tracks.length || CONFIG.playerStyle === "playlist") return fallback();
+
+    window.onSpotifyIframeApiReady = (API) => {
+      API.createController(
+        host,
+        { uri: "spotify:track:" + tracks[idx].id, width: "100%", height: 80 },
+        (controller) => {
+          ctl = controller;
+          wrap.classList.add("live");
+          controller.addListener("playback_update", (e) => {
+            const d = e.data;
+            if (!d || !d.duration || d.isPaused) { advancing = false; return; }
+            // Spotify reports position in ms; roll over near the end.
+            if (!advancing && d.position >= d.duration - 700) {
+              advancing = true;
+              go(1);
+            } else if (d.position < d.duration - 2000) {
+              advancing = false;
+            }
+          });
+        }
+      );
+    };
+
+    const script = el("script");
+    script.src = "https://open.spotify.com/embed/iframe-api/v1";
+    script.async = true;
+    script.onerror = fallback;
+    document.head.append(script);
+    setTimeout(fallback, 6000);          // no controller by then → plain embed
+  }
+
+  const open = () => { mount(); document.body.classList.add("open-player"); };
   const shut = () => document.body.classList.remove("open-player");
 
   launch.addEventListener("click", open);
-  close.addEventListener("click", shut);
-  addEventListener("keydown", (e) => e.key === "Escape" && shut());
+  shutBtn.addEventListener("click", shut);
+  prev.addEventListener("click", () => go(-1));
+  next.addEventListener("click", () => go(1));
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape") shut();
+    if (!document.body.classList.contains("open-player")) return;
+    if (e.key === "ArrowRight" && e.shiftKey) go(1);
+    if (e.key === "ArrowLeft" && e.shiftKey) go(-1);
+  });
 }
 
 /* ───────────────────────── idle fade ─────────────────────────
