@@ -26,7 +26,7 @@ body{
 /* ── background ── */
 .backdrop{
   position:fixed;inset:-6%;
-  background:url("media/poster.jpg") center/cover no-repeat;
+  background:url("media/poster.jpg?v=2") center/cover no-repeat;
   filter:blur(46px) saturate(.8) brightness(.5);
   transform:scale(1.15);
   z-index:0;
@@ -39,25 +39,10 @@ body{
   z-index:1;
 }
 
-/* Portrait can't show a 16:9 frame without either letterboxing it into a
-   strip or cropping. We crop — to the left column of the room (lamp, framed
-   print, books), which happens to contain none of the painted wordmark. The
-   live <h1> below carries the name instead. */
-/* Narrow phones: crop to the left column — lamp, framed print, the boy.
-   The painted wordmark starts at 27% across, so a 26%-wide slice misses it. */
-@media (orientation:portrait) and (max-aspect-ratio:12/25){
-  .bg{object-position:0% center;transform:scale(1.16);transform-origin:0 50%}
-}
-/* Wider portrait (older 16:9 phones, tablets): no title-free slice is wide
-   enough, so letterbox the whole frame as a card over the blurred backdrop. */
-@media (orientation:portrait) and (min-aspect-ratio:12/25){
-  .bg{
-    object-fit:contain;
-    height:auto;top:50%;transform:translateY(-50%);
-    border-radius:14px;
-    box-shadow:0 30px 80px rgba(0,0,0,.5);
-  }
-}
+/* Portrait cropping is done in app.js — see fitBackground(). A CSS
+   breakpoint can't do it: the painted wordmark occupies the middle 27%-73%
+   of the frame, so the slice on screen has to stay under 27% wide whatever
+   the viewport is, and phone viewports move as the browser bars slide. */
 
 /* a touch of shading so the chrome stays legible over the art */
 .grade{
@@ -65,6 +50,18 @@ body{
   background:
     linear-gradient(to bottom,rgba(6,12,18,.46) 0%,rgba(6,12,18,0) 22%),
     linear-gradient(to top,rgba(6,12,18,.62) 0%,rgba(6,12,18,0) 34%);
+}
+
+/* Portrait shows a narrow slice of a wide frame, and the painted wordmark
+   can just reach the right edge. This shades that edge into the wall
+   colour — reads as depth, hides the seam. */
+@media (orientation:portrait){
+  .grade{
+    background:
+      linear-gradient(to bottom,rgba(6,12,18,.46) 0%,rgba(6,12,18,0) 22%),
+      linear-gradient(to top,rgba(6,12,18,.66) 0%,rgba(6,12,18,0) 34%),
+      linear-gradient(to left,rgba(11,22,32,.96) 0%,rgba(11,22,32,.72) 8%,rgba(11,22,32,0) 22%);
+  }
 }
 
 /* ── wordmark ── */
@@ -84,8 +81,8 @@ body{
   letter-spacing:.42em;text-indent:.42em;
   color:var(--muted);text-transform:uppercase;
 }
-/* Anywhere the painted wordmark is visible, the live one steps aside. */
-@media (min-aspect-ratio:12/25){
+/* Landscape shows the painted wordmark, so the live one steps aside. */
+@media (min-aspect-ratio:1/1){
   .wordmark{
     position:absolute;width:1px;height:1px;overflow:hidden;
     clip-path:inset(50%);white-space:nowrap;
