@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>एकाग्र — Ekāgra</title>
+<meta name="description" content="Music to disappear into your work. एकाग्र — one-pointed.">
+<meta name="theme-color" content="#0d1a24">
+
+<meta property="og:title" content="एकाग्र — Ekāgra">
+<meta property="og:description" content="Music to disappear into your work.">
+<meta property="og:image" content="media/poster.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- backdrop: blurred still fills the gaps in portrait, video sits on top -->
+<div class="backdrop" aria-hidden="true"></div>
+
+<video id="bg" class="bg" autoplay muted loop playsinline preload="auto" poster="media/poster.jpg" aria-hidden="true">
+  <source src="media/ekagra-desk-bg.webm" type="video/webm">
+  <source src="media/ekagra-desk-bg.mp4" type="video/mp4">
+</video>
+
+<div class="grade" aria-hidden="true"></div>
+
+<!-- live wordmark: carries the name on portrait screens, where the one baked
+     into the artwork gets cropped away. Visually hidden on wide screens. -->
+<h1 class="wordmark"><span class="dev">एकाग्र</span><span class="lat">Ekāgra</span></h1>
+
+<!-- ───────────── top bar ───────────── -->
+<header class="top">
+  <div class="top-l">
+    <span id="clock" class="clock">--:--</span>
+  </div>
+
+  <div class="top-c">
+    <span class="presence" id="presence" hidden>
+      <i class="dot"></i><b id="online">1</b> online
+    </span>
+  </div>
+
+  <nav class="top-r">
+    <a class="link" id="link-spotify" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.586 14.424a.623.623 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.623.623 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 0 1 .207.857Zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 1 1-.452-1.492c3.632-1.102 8.147-.568 11.232 1.329a.78.78 0 0 1 .257 1.072Zm.105-2.835c-3.223-1.914-8.54-2.09-11.617-1.156a.935.935 0 1 1-.542-1.79c3.532-1.072 9.404-.865 13.115 1.338a.935.935 0 1 1-.956 1.608Z"/></svg>
+      <span class="lbl">Spotify</span> <span class="arw">↗</span>
+    </a>
+    <a class="link" id="link-ytm" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.4a8.4 8.4 0 1 1 0-16.8 8.4 8.4 0 0 1 0 16.8Zm-2.2-12.6 6.4 3.7-6.4 3.7V7.8Z"/></svg>
+      <span class="lbl">YT&nbsp;Music</span> <span class="arw">↗</span>
+    </a>
+  </nav>
+</header>
+
+<!-- ───────────── player ───────────── -->
+<footer class="dock">
+  <div class="player" id="player">
+    <img class="art" id="art" src="art/art-1.jpg" alt="">
+
+    <div class="meta">
+      <div class="title" id="track-title">Add tracks to /audio</div>
+      <div class="artist" id="track-artist">playlist.js</div>
+      <div class="bar" id="bar" role="slider" tabindex="0"
+           aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="bar-fill" id="bar-fill"></div>
+        <div class="bar-knob" id="bar-knob"></div>
+      </div>
+      <div class="times"><span id="t-cur">0:00</span> / <span id="t-dur">0:00</span></div>
+    </div>
+
+    <div class="controls">
+      <button class="ctl" id="prev" aria-label="Previous track">
+        <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M7 6h2v12H7V6Zm10 0v12l-8-6 8-6Z"/></svg>
+      </button>
+      <button class="ctl play" id="play" aria-label="Play">
+        <svg id="ic-play" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>
+        <svg id="ic-pause" viewBox="0 0 24 24" width="20" height="20" style="display:none"><path fill="currentColor" d="M7 5h3.4v14H7V5Zm6.6 0H17v14h-3.4V5Z"/></svg>
+      </button>
+      <button class="ctl" id="next" aria-label="Next track">
+        <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M15 6h2v12h-2V6ZM7 6l8 6-8 6V6Z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <p class="credit">a quiet corner by <a id="credit-link" href="#" target="_blank" rel="noopener">@you</a></p>
+</footer>
+
+<script src="playlist.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
