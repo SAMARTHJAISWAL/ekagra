@@ -31,6 +31,9 @@ const CONFIG = {
   presenceEndpoint : "",
   presencePollMs   : 20000,
 
+  // Text on the collapsed pill that opens the player.
+  launchLabel : "sitar for focus",
+
   startVolume : 0.8,
 };
 
@@ -107,23 +110,58 @@ const mmss = (s) => {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) v.pause();
 })();
 
-/* ───────────────────────── spotify embed mode ───────────────────────── */
+/* ───────────────────────── spotify embed mode ─────────────────────────
+   Spotify's playlist embed has a minimum height and draws its own queue,
+   which fights the artwork. So it starts collapsed as a small glass pill
+   and expands into the real card on click — the iframe isn't even created
+   until then, so nothing loads from Spotify unless someone asks for it. */
 if (CONFIG.mode === "spotify") {
   const dock = document.querySelector(".dock");
   $("player").remove();
-  const frame = document.createElement("iframe");
-  frame.className = "embed";
-  frame.src = "https://open.spotify.com/embed/playlist/" + CONFIG.spotifyEmbedId +
-              "?utm_source=generator&theme=0";
-  frame.title = "Spotify player";
-  frame.loading = "lazy";
-  frame.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
-  frame.setAttribute("frameborder", "0");
+
+  const stage = document.createElement("div");
+  stage.className = "stage";
+
+  const launch = document.createElement("button");
+  launch.className = "launch";
+  launch.type = "button";
+  launch.innerHTML =
+    '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">' +
+    '<path fill="currentColor" d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>' +
+    '<span>' + (CONFIG.launchLabel || "play") + '</span>';
+
   const wrap = document.createElement("div");
   wrap.className = "embed-wrap";
-  wrap.appendChild(frame);
-  dock.prepend(wrap);
-  document.body.classList.add("embed-mode");
+
+  const close = document.createElement("button");
+  close.className = "collapse";
+  close.type = "button";
+  close.setAttribute("aria-label", "Hide player");
+  close.innerHTML =
+    '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">' +
+    '<path fill="currentColor" d="M6.4 7.8 12 13.4l5.6-5.6 1.4 1.4-7 7-7-7 1.4-1.4Z"/></svg>';
+
+  stage.append(launch, wrap);
+  dock.prepend(stage);
+
+  const open = () => {
+    if (!wrap.querySelector("iframe")) {
+      const frame = document.createElement("iframe");
+      frame.className = "embed";
+      frame.src = "https://open.spotify.com/embed/playlist/" +
+                  CONFIG.spotifyEmbedId + "?utm_source=generator&theme=0";
+      frame.title = "Spotify player";
+      frame.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+      frame.setAttribute("frameborder", "0");
+      wrap.append(frame, close);
+    }
+    document.body.classList.add("open-player");
+  };
+  const shut = () => document.body.classList.remove("open-player");
+
+  launch.addEventListener("click", open);
+  close.addEventListener("click", shut);
+  addEventListener("keydown", (e) => e.key === "Escape" && shut());
 }
 
 /* ───────────────────────── idle fade ─────────────────────────
