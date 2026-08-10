@@ -221,15 +221,14 @@ if (CONFIG.mode === "spotify") {
   });
 }
 
-/* ── files mode: our own player, our own typography ── */
+/* ── files mode: our own player, our own typography ──
+   No launcher here — the player is the thing, so it's just present from
+   the start. (Browsers won't autoplay audio, so the first press of play
+   is the visitor's own gesture, as it has to be.) */
 if (CONFIG.mode !== "spotify") {
-  const player = $("player");
-  stage.append(player);
-  player.append(shutBtn);
-  launch.addEventListener("click", () => {
-    openDock();
-    toggle();                 // one click: reveal and play
-  });
+  launch.remove();
+  stage.append($("player"));
+  openDock();
 }
 
 /* ───────────────────────── idle fade ─────────────────────────
