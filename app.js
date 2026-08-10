@@ -25,12 +25,6 @@ const CONFIG = {
   creditText : "@samarthjaiswall",
   creditHref : "https://x.com/samarthjaiswall",
 
-  // "N online". Point this at an endpoint returning {"count": 42} to make it
-  // real. Left empty, the counter reports only this visitor — which is honest,
-  // if lonely. See README for a 20-line version on any edge runtime.
-  presenceEndpoint : "",
-  presencePollMs   : 20000,
-
   // Text on the collapsed pill that opens the player.
   launchLabel : "sitar for focus",
 
@@ -84,22 +78,6 @@ const mmss = (s) => {
     if (CONFIG.creditHref) a.href = CONFIG.creditHref;
     else a.replaceWith(document.createTextNode(CONFIG.creditText));
   }
-})();
-
-/* ───────────────────────── presence ───────────────────────── */
-(async function presence() {
-  const wrap = $("presence"), num = $("online");
-  wrap.hidden = false;
-  if (!CONFIG.presenceEndpoint) { num.textContent = "1"; return; }
-  const poll = async () => {
-    try {
-      const r = await fetch(CONFIG.presenceEndpoint, { cache: "no-store" });
-      const d = await r.json();
-      if (typeof d.count === "number") num.textContent = d.count;
-    } catch { /* keep the last known value */ }
-    setTimeout(poll, CONFIG.presencePollMs);
-  };
-  poll();
 })();
 
 /* ───────────────────────── background video ───────────────────────── */
