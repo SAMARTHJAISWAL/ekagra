@@ -92,6 +92,15 @@ body{
   }
 }
 
+/* ── idle fade ──
+   The artwork is the point; the chrome is not. After a few seconds of
+   stillness everything recedes, and comes back the moment you move. */
+.top,.dock{transition:opacity .7s ease}
+body.idle .top,body.idle .dock{opacity:.12}
+@media (prefers-reduced-motion:reduce){
+  body.idle .top,body.idle .dock{opacity:1}
+}
+
 /* ── top bar ── */
 .top{
   position:fixed;top:0;left:0;right:0;z-index:3;
@@ -141,18 +150,19 @@ body{
 .link.todo:hover{color:var(--muted);background:var(--glass);transform:none}
 
 /* ── spotify embed ── */
-/* Spotify paints its own card, so we just give it a glass rim to sit in. */
+/* 80px is Spotify's single-row layout — one track, one button, no queue
+   spilling out of the frame. 152px brings the track list back. */
 .embed-wrap{
-  width:min(568px,100%);padding:5px;
-  border-radius:18px;
+  width:min(440px,100%);padding:4px;
+  border-radius:16px;
   background:var(--glass);border:1px solid var(--stroke);
   backdrop-filter:blur(22px) saturate(1.2);
   -webkit-backdrop-filter:blur(22px) saturate(1.2);
   box-shadow:0 18px 46px rgba(0,0,0,.42);
 }
 .embed{
-  display:block;width:100%;height:152px;
-  border:0;border-radius:13px;
+  display:block;width:100%;height:80px;
+  border:0;border-radius:12px;
 }
 
 /* ── player dock ── */

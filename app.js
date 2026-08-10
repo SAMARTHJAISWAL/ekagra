@@ -126,6 +126,33 @@ if (CONFIG.mode === "spotify") {
   document.body.classList.add("embed-mode");
 }
 
+/* ───────────────────────── idle fade ─────────────────────────
+   Let the room be the room. The clock, links and player dim away after a
+   few seconds of stillness and return on any movement. Never dims while
+   the pointer is over the player itself. */
+(function idle() {
+  const DELAY = 4000;
+  let timer, held = false;
+
+  const wake = () => {
+    document.body.classList.remove("idle");
+    clearTimeout(timer);
+    if (!held) timer = setTimeout(() => document.body.classList.add("idle"), DELAY);
+  };
+
+  ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"]
+    .forEach((e) => addEventListener(e, wake, { passive: true }));
+
+  const dock = document.querySelector(".dock");
+  dock.addEventListener("pointerenter", () => { held = true; wake(); });
+  dock.addEventListener("pointerleave", () => { held = false; wake(); });
+
+  // Touch devices get no hover, so keep the chrome up for longer there.
+  if (matchMedia("(hover: none)").matches) held = true;
+
+  wake();
+})();
+
 /* ───────────────────────── player ───────────────────────── */
 const audio = new Audio();
 audio.preload = "metadata";
