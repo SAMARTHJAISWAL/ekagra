@@ -10,7 +10,7 @@ const CONFIG = {
   //               from /audio (see playlist.js). Your design, your rights
   //               problem: a public page playing commercial recordings needs
   //               a licence.
-  mode : "spotify",
+  mode : "files",
 
   // Playlist id for the embed — the bit after /playlist/ in the URL.
   //   4xSc9Y0PDgZP2CUck9PXyK  Sitar For Mental Health (Saviour) — 22 tracks
@@ -114,53 +114,54 @@ const mmss = (s) => {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) v.pause();
 })();
 
-/* ───────────────────────── spotify mode ─────────────────────────
-   A *playlist* embed always draws its own queue and its own title row.
-   A *track* embed draws just the song. So we play one track at a time and
-   move through playlist.js ourselves, using Spotify's official IFrame API
-   so playback carries across the change instead of stopping dead.
+/* ───────────────────────── the dock ─────────────────────────
+   Both modes share one shape: a small pill at rest, which opens into the
+   player. In "files" mode that first click also starts the music, so
+   getting sound out of the page costs exactly one gesture. */
+const el = (tag, cls, html) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html) n.innerHTML = html;
+  return n;
+};
+const ICON = {
+  play : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>',
+  prev : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M7 6h2v12H7V6Zm10 0v12l-8-6 8-6Z"/></svg>',
+  next : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M15 6h2v12h-2V6ZM7 6l8 6-8 6V6Z"/></svg>',
+  down : '<svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M6.4 7.8 12 13.4l5.6-5.6 1.4 1.4-7 7-7-7 1.4-1.4Z"/></svg>',
+};
 
-   Starts collapsed as a pill — the iframe isn't created until someone
-   clicks, so nothing loads from Spotify unless a visitor wants sound. */
+const dock    = document.querySelector(".dock");
+const stage   = el("div", "stage");
+const launch  = el("button", "launch", ICON.play + "<span>" + (CONFIG.launchLabel || "play") + "</span>");
+const shutBtn = el("button", "collapse", ICON.down);
+launch.type = shutBtn.type = "button";
+shutBtn.setAttribute("aria-label", "Hide player");
+dock.prepend(stage);
+stage.append(launch);
+
+const openDock = () => document.body.classList.add("open-player");
+const shutDock = () => document.body.classList.remove("open-player");
+shutBtn.addEventListener("click", shutDock);
+addEventListener("keydown", (e) => e.key === "Escape" && shutDock());
+
+/* ── spotify mode: one track at a time, driven by the official IFrame API ── */
 if (CONFIG.mode === "spotify") {
-  const dock = document.querySelector(".dock");
   $("player").remove();
 
   const tracks = ((window.PLAYLIST && window.PLAYLIST.tracks) || []).filter((t) => t.id);
   let idx = 0, ctl = null, mounted = false, advancing = false;
 
-  const el = (tag, cls, html) => {
-    const n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (html) n.innerHTML = html;
-    return n;
-  };
-  const ICON = {
-    play : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>',
-    prev : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M7 6h2v12H7V6Zm10 0v12l-8-6 8-6Z"/></svg>',
-    next : '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M15 6h2v12h-2V6ZM7 6l8 6-8 6V6Z"/></svg>',
-    down : '<svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M6.4 7.8 12 13.4l5.6-5.6 1.4 1.4-7 7-7-7 1.4-1.4Z"/></svg>',
-  };
-
-  const stage  = el("div", "stage");
-  const launch = el("button", "launch", ICON.play + "<span>" + (CONFIG.launchLabel || "play") + "</span>");
-  launch.type = "button";
-
   const wrap = el("div", "embed-wrap");
   const prev = el("button", "nav", ICON.prev);
   const next = el("button", "nav", ICON.next);
   const host = el("div", "embed-host");
-  const shutBtn = el("button", "collapse", ICON.down);
-  [prev, next, shutBtn].forEach((b) => (b.type = "button"));
+  [prev, next].forEach((b) => (b.type = "button"));
   prev.setAttribute("aria-label", "Previous track");
   next.setAttribute("aria-label", "Next track");
-  shutBtn.setAttribute("aria-label", "Hide player");
   wrap.append(prev, host, next, shutBtn);
-  stage.append(launch, wrap);
-  dock.prepend(stage);
+  stage.append(wrap);
 
-  /* If the IFrame API can't load, fall back to the plain playlist embed —
-     less pretty, but it always works. */
   function fallback() {
     if (ctl) return;
     wrap.classList.add("plain");
@@ -178,13 +179,12 @@ if (CONFIG.mode === "spotify") {
     if (!ctl || !tracks.length) return;
     idx = (idx + step + tracks.length) % tracks.length;
     ctl.loadUri("spotify:track:" + tracks[idx].id);
-    setTimeout(() => ctl.play(), 500);   // loadUri needs a beat before play takes
+    setTimeout(() => ctl.play(), 500);
   }
 
   function mount() {
     if (mounted) return;
     mounted = true;
-
     if (!tracks.length || CONFIG.playerStyle === "playlist") return fallback();
 
     window.onSpotifyIframeApiReady = (API) => {
@@ -197,38 +197,38 @@ if (CONFIG.mode === "spotify") {
           controller.addListener("playback_update", (e) => {
             const d = e.data;
             if (!d || !d.duration || d.isPaused) { advancing = false; return; }
-            // Spotify reports position in ms; roll over near the end.
-            if (!advancing && d.position >= d.duration - 700) {
-              advancing = true;
-              go(1);
-            } else if (d.position < d.duration - 2000) {
-              advancing = false;
-            }
+            if (!advancing && d.position >= d.duration - 700) { advancing = true; go(1); }
+            else if (d.position < d.duration - 2000) advancing = false;
           });
         }
       );
     };
-
     const script = el("script");
     script.src = "https://open.spotify.com/embed/iframe-api/v1";
     script.async = true;
     script.onerror = fallback;
     document.head.append(script);
-    setTimeout(fallback, 6000);          // no controller by then → plain embed
+    setTimeout(fallback, 6000);
   }
 
-  const open = () => { mount(); document.body.classList.add("open-player"); };
-  const shut = () => document.body.classList.remove("open-player");
-
-  launch.addEventListener("click", open);
-  shutBtn.addEventListener("click", shut);
+  launch.addEventListener("click", () => { mount(); openDock(); });
   prev.addEventListener("click", () => go(-1));
   next.addEventListener("click", () => go(1));
   addEventListener("keydown", (e) => {
-    if (e.key === "Escape") shut();
-    if (!document.body.classList.contains("open-player")) return;
-    if (e.key === "ArrowRight" && e.shiftKey) go(1);
-    if (e.key === "ArrowLeft" && e.shiftKey) go(-1);
+    if (!document.body.classList.contains("open-player") || !e.shiftKey) return;
+    if (e.key === "ArrowRight") go(1);
+    if (e.key === "ArrowLeft") go(-1);
+  });
+}
+
+/* ── files mode: our own player, our own typography ── */
+if (CONFIG.mode !== "spotify") {
+  const player = $("player");
+  stage.append(player);
+  player.append(shutBtn);
+  launch.addEventListener("click", () => {
+    openDock();
+    toggle();                 // one click: reveal and play
   });
 }
 
@@ -269,7 +269,7 @@ let i = 0;
 let ready = false;
 
 const els = {
-  art: $("art"), title: $("track-title"), artist: $("track-artist"),
+  art: $("art"), title: $("track-title"),
   fill: $("bar-fill"), knob: $("bar-knob"), bar: $("bar"),
   cur: $("t-cur"), dur: $("t-dur"),
   play: $("play"), icPlay: $("ic-play"), icPause: $("ic-pause"),
@@ -281,7 +281,6 @@ function paintTrack() {
   const t = list[i];
   if (!t) return;
   els.title.textContent = t.title || "Untitled";
-  els.artist.textContent = t.artist || "";
   if (t.art) els.art.src = t.art;
   els.dur.textContent = mmss(t.duration || 0);
   document.title = `${t.title} — एकाग्र`;
@@ -324,13 +323,9 @@ function setPlaying(on) {
 let touched = false;   // has the visitor actually asked for sound yet?
 
 function fail() {
-  if (touched) {
-    els.title.textContent = "Couldn't play that track";
-    els.artist.textContent = "check the file path in playlist.js";
-  } else {
-    els.title.textContent = list[i] ? list[i].title : "No tracks yet";
-    els.artist.textContent = "add your files to /audio";
-  }
+  els.title.textContent = touched
+    ? "no audio file for this one yet"
+    : (list[i] ? list[i].title : "no tracks yet");
   setPlaying(false);
 }
 
@@ -403,8 +398,7 @@ if ("mediaSession" in navigator) {
   list = ((window.PLAYLIST && window.PLAYLIST.tracks) || []).filter((t) => t && t.src);
 
   if (!list.length) {
-    els.title.textContent = "No tracks yet";
-    els.artist.textContent = "add files to /audio and list them in playlist.js";
+    els.title.textContent = "no tracks yet";
     return;
   }
 
