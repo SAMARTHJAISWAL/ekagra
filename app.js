@@ -10,7 +10,7 @@ const CONFIG = {
   //               from /audio (see playlist.js). Your design, your rights
   //               problem: a public page playing commercial recordings needs
   //               a licence.
-  mode : "files",
+  mode : "spotify",
 
   // Playlist id for the embed — the bit after /playlist/ in the URL.
   //   4xSc9Y0PDgZP2CUck9PXyK  Sitar For Mental Health (Saviour) — 22 tracks
