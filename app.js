@@ -164,6 +164,8 @@ if (CONFIG.mode === "spotify") {
 
   function fallback() {
     if (ctl) return;
+    console.warn("[ekagra] Spotify IFrame API unavailable — using the plain " +
+                 "playlist embed. Usually a blocked script or a slow network.");
     wrap.classList.add("plain");
     host.innerHTML = "";
     const f = el("iframe", "embed");
@@ -194,6 +196,7 @@ if (CONFIG.mode === "spotify") {
         (controller) => {
           ctl = controller;
           wrap.classList.add("live");
+          console.info("[ekagra] Spotify IFrame API ready — per-track player.");
           controller.addListener("playback_update", (e) => {
             const d = e.data;
             if (!d || !d.duration || d.isPaused) { advancing = false; return; }
@@ -205,6 +208,7 @@ if (CONFIG.mode === "spotify") {
     };
     const script = el("script");
     script.src = "https://open.spotify.com/embed/iframe-api/v1";
+    script.onload = () => console.info("[ekagra] API script loaded.");
     script.async = true;
     script.onerror = fallback;
     document.head.append(script);
