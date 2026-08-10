@@ -10,7 +10,7 @@ const CONFIG = {
   //               from /audio (see playlist.js). Your design, your rights
   //               problem: a public page playing commercial recordings needs
   //               a licence.
-  mode : "files",
+  mode : "spotify",
 
   // Playlist id for the embed — the bit after /playlist/ in the URL.
   //   4xSc9Y0PDgZP2CUck9PXyK  Sitar For Mental Health (Saviour) — 22 tracks
@@ -159,7 +159,7 @@ if (CONFIG.mode === "spotify") {
   [prev, next].forEach((b) => (b.type = "button"));
   prev.setAttribute("aria-label", "Previous track");
   next.setAttribute("aria-label", "Next track");
-  wrap.append(prev, host, next, shutBtn);
+  wrap.append(prev, host, next);
   stage.append(wrap);
 
   function fallback() {
@@ -211,7 +211,10 @@ if (CONFIG.mode === "spotify") {
     setTimeout(fallback, 6000);
   }
 
-  launch.addEventListener("click", () => { mount(); openDock(); });
+  // No launcher: the player is present from load, same as files mode.
+  launch.remove();
+  mount();
+  openDock();
   prev.addEventListener("click", () => go(-1));
   next.addEventListener("click", () => go(1));
   addEventListener("keydown", (e) => {
