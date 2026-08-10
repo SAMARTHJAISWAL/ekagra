@@ -22,8 +22,8 @@ const CONFIG = {
   ytMusic : "https://music.youtube.com/watch?v=yTdUprbLodw",
 
   // Bottom credit. Set text to "" to hide the line entirely.
-  creditText : "@you",
-  creditHref : "",
+  creditText : "@samarthjaiswall",
+  creditHref : "https://x.com/samarthjaiswall",
 
   // "N online". Point this at an endpoint returning {"count": 42} to make it
   // real. Left empty, the counter reports only this visitor — which is honest,
