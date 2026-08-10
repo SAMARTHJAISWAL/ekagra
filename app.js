@@ -105,6 +105,34 @@ const mmss = (s) => {
 /* ───────────────────────── background video ───────────────────────── */
 (function background() {
   const v = $("bg");
+
+  /* The frame is 16:9 and the wordmark is painted across its middle. In
+     portrait we crop to the left column — lamp, framed print, the boy —
+     which is the only title-free part wide enough to use, and the live
+     <h1> carries the name instead.
+
+     The zoom is computed, not guessed: whatever the viewport, the slice
+     on screen stays at ~30% of the frame's width. That's a shade past
+     where the painted wordmark starts (27%), so a sliver of it can reach
+     the right edge — the portrait scrim in styles.css shades that away.
+     Cropping harder than this loses the boy and leaves a lamp close-up.
+     Phone viewports change as the URL bar slides, so this re-runs on
+     resize. */
+  const fitBackground = () => {
+    const vw = innerWidth, vh = innerHeight;
+    if (vw >= vh) {                       // landscape: show the whole frame
+      v.style.transform = "";
+      v.style.objectPosition = "";
+      return;
+    }
+    const visible = (vw / vh) / (16 / 9); // fraction of the frame width on screen
+    v.style.objectPosition = "0% center";
+    v.style.transformOrigin = "0 50%";
+    v.style.transform = "scale(" + Math.max(1, visible / 0.30).toFixed(3) + ")";
+  };
+  fitBackground();
+  addEventListener("resize", fitBackground, { passive: true });
+  addEventListener("orientationchange", fitBackground, { passive: true });
   // Some browsers refuse the autoplay promise until a gesture even when muted.
   const kick = () => v.play().catch(() => {});
   kick();
