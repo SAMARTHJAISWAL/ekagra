@@ -1,10 +1,14 @@
 # एकाग्र / Ekāgra
 
+**Music to disappear into your work.**
+
+### ▶ [ekagra-mocha.vercel.app](https://ekagra-mocha.vercel.app)
+
+[![Ekāgra — a boy studying by lamplight beneath the word एकाग्र](media/og.jpg)](https://ekagra-mocha.vercel.app)
+
 A single-page listening room: an illustrated loop plays behind everything, a
 glass player sits at the bottom, a clock that doubles as a focus timer sits up
 top. Static files only — no build step, no framework, no dependencies.
-
-**Live:** https://ekagra-mocha.vercel.app
 
 ```
 index.html            markup + social preview tags
@@ -55,7 +59,12 @@ Deploying is `git push` — Vercel redeploys `main` on its own. See
 One track at a time through Spotify's official IFrame API, with Ekāgra's own
 previous/next buttons either side and auto-advance at the end of each track.
 Spotify serves full tracks to listeners who are logged in and 30-second
-previews to everyone else. Nothing to host, nothing to license.
+previews to everyone else; previews play back to back rather than stopping on
+Spotify's "Get Spotify" card. Nothing to host, nothing to license.
+
+Logged in to Spotify but still hearing previews? The browser is probably
+blocking third-party cookies, which hides the login from the embed. Allow them
+for the site (the icon left of the address bar) or sign in from the player.
 
 If the API script can't load (blocked, slow network), the plain playlist embed
 takes over after 8 seconds. Set `playerStyle: "playlist"` to always use that.
