@@ -310,8 +310,8 @@ function spotifyPlayer() {
 
   const tracks = ORDERED.filter((t) => t.id);
   let idx = resumeIndex(tracks);
-  let ctl = null, settled = false, advancing = false;
-  let pos = 0, playing = false, titled = -1;
+  let ctl = null, settled = false, advancing = false, pendingPlay = false;
+  let pos = 0, playing = false, titled = -1, endTimer = 0, playTimer = 0;
 
   const wrap = el("div", "embed-wrap");
   const prev = el("button", "nav", ICON.prev);
@@ -343,11 +343,21 @@ function spotifyPlayer() {
   function go(step) {
     if (!ctl || !tracks.length) return;
     idx = (idx + step + tracks.length) % tracks.length;
-    advancing = true;
+    advancing = pendingPlay = true;
+    clearTimeout(endTimer);
     ctl.loadUri("spotify:track:" + tracks[idx].id);
     store.set("track", trackKey(tracks[idx]));
-    // loadUri resolves before the new track can take a play() call.
-    setTimeout(() => { ctl.play(); advancing = false; }, 500);
+    // The embed fires "ready" once the new track can take play(); the timer
+    // covers the odd load that never says so.
+    clearTimeout(playTimer);
+    playTimer = setTimeout(startPending, 2000);
+  }
+
+  function startPending() {
+    clearTimeout(playTimer);
+    if (!pendingPlay) return;
+    pendingPlay = advancing = false;
+    ctl.play();
   }
 
   if (!tracks.length || CONFIG.playerStyle === "playlist") return fallback();
@@ -362,16 +372,27 @@ function spotifyPlayer() {
         settled = true;
         ctl = controller;
         wrap.classList.add("live");
+        controller.addListener("ready", startPending);
         controller.addListener("playback_update", (e) => {
           const d = e.data;
           if (!d) return;
+          const wasPlaying = playing;
           pos = d.position || 0;
           playing = !d.isPaused;
           document.body.classList.toggle("playing", playing);
           if (playing && titled !== idx) { titled = idx; nowPlaying(tracks[idx]); }
-          // Auto-advance just before the end; the embed would otherwise stop.
-          if (!d.duration || d.isPaused || advancing) return;
-          if (d.position >= d.duration - 700) go(1);
+
+          /* Auto-advance. Updates arrive about once a second and the embed
+             stops dead at the end (for logged-out listeners, on a "Get
+             Spotify" card after a ~30s preview), so instead of hoping an
+             update lands in the last moment, schedule the switch for when
+             the track runs out. Each update re-aims the timer; a pause
+             cancels it. */
+          clearTimeout(endTimer);
+          if (!d.duration || advancing) return;
+          const left = d.duration - pos;
+          if (playing && left < 2500) endTimer = setTimeout(() => go(1), Math.max(0, left - 150));
+          else if (!playing && wasPlaying && left < 1500) go(1);
         });
       }
     );
