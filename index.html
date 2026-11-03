@@ -20,7 +20,16 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="A boy studying by lamplight at a desk at night, beneath the word एकाग्र">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="एकाग्र — Ekāgra">
+<meta name="twitter:description" content="Music to disappear into your work.">
 <meta name="twitter:image" content="https://ekagra-mocha.vercel.app/media/og.jpg">
+<link rel="canonical" href="https://ekagra-mocha.vercel.app/">
+
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="color-scheme" content="dark">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,12 +55,12 @@
 <!-- ───────────── top bar ───────────── -->
 <header class="top">
   <div class="top-l">
-    <span id="clock" class="clock">--:--</span>
+    <button type="button" id="clock" class="clock"><i class="clock-dot" aria-hidden="true"></i><span class="clock-t">--:--</span></button>
   </div>
 
   <div class="top-c">
     <span class="presence" id="presence" hidden>
-      <i class="dot"></i><b id="online">1</b> online
+      <i class="dot" aria-hidden="true"></i><b id="online">1</b> online
     </span>
   </div>
 
@@ -84,14 +93,14 @@
 
     <div class="controls">
       <button class="ctl" id="prev" aria-label="Previous track">
-        <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M7 6h2v12H7V6Zm10 0v12l-8-6 8-6Z"/></svg>
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M7 6h2v12H7V6Zm10 0v12l-8-6 8-6Z"/></svg>
       </button>
       <button class="ctl play" id="play" aria-label="Play">
-        <svg id="ic-play" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>
-        <svg id="ic-pause" viewBox="0 0 24 24" width="20" height="20" style="display:none"><path fill="currentColor" d="M7 5h3.4v14H7V5Zm6.6 0H17v14h-3.4V5Z"/></svg>
+        <svg id="ic-play" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>
+        <svg id="ic-pause" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="display:none"><path fill="currentColor" d="M7 5h3.4v14H7V5Zm6.6 0H17v14h-3.4V5Z"/></svg>
       </button>
       <button class="ctl" id="next" aria-label="Next track">
-        <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M15 6h2v12h-2V6ZM7 6l8 6-8 6V6Z"/></svg>
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M15 6h2v12h-2V6ZM7 6l8 6-8 6V6Z"/></svg>
       </button>
     </div>
   </div>

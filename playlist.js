@@ -1,14 +1,11 @@
 /* ── your tracks ──────────────────────────────────────────────────────
-   Pre-filled from your Spotify playlist "Sitar For Mental Health".
-   Drop the matching audio files into /audio using the filenames below —
-   or rename `src` to whatever your files are actually called.
+   Pre-filled from the Spotify playlist "Sitar For Mental Health".
+   Both modes read this list, in this order.
 
-   Files go in /audio named 01.mp3 … 22.mp3, in this order. That's it —
-   the titles below are what the player shows, so the filenames only have
-   to match the numbering.
-
-   `id` is the Spotify track id, used in "spotify" mode. `src`/`art` are
-   used in "files" mode. Both modes read this list.                         */
+   `id`         Spotify track id — the bit after /track/ in a share link.
+                Used in "spotify" mode.
+   `src`, `art` Used in "files" mode. Audio goes in /audio named 01.mp3 …
+                22.mp3 by position, or change `src` to your filenames.     */
 
 window.PLAYLIST = {
   tracks: [

@@ -1,46 +1,39 @@
-# Getting it live on Vercel
+# Deploying
 
-This folder is already a git repo with one commit, and `vercel.json` is set up
-(long cache on media, no cache on html/js/css). Nothing to build.
-
-## 1. Push to GitHub
-
-Create an empty repo at https://github.com/new — no README, no .gitignore,
-nothing, or the first push will conflict. Then, in this folder:
+The site is live on Vercel at https://ekagra-mocha.vercel.app, connected to
+`github.com/SAMARTHJAISWAL/ekagra`. Every push to `main` redeploys in about
+thirty seconds:
 
 ```bash
-git remote add origin https://github.com/<you>/ekagra.git
-git push -u origin main
+git add -A && git commit -m "what changed" && git push
 ```
 
-With the `gh` CLI it's one line instead:
+Never `--force` — the GitHub copy is the source of truth, and edits made in the
+GitHub web editor live only there until you `git pull`.
 
-```bash
-gh repo create ekagra --public --source=. --push
-```
-
-## 2. Import into Vercel
+## Setting it up from scratch
 
 1. https://vercel.com/new → **Import Git Repository** → pick the repo.
 2. Framework Preset: **Other**. Leave build command and output directory empty
    — it's a static folder.
 3. **Deploy**.
 
-Live at `https://<project>.vercel.app` in about thirty seconds. Every
-`git push` after this redeploys on its own.
+`vercel.json` sets the cache headers (a week on media, always-revalidate on
+html/js/css) and a handful of security headers.
 
-## 3. A custom domain (optional)
+## A custom domain (optional)
 
-Vercel project → Settings → Domains → add the domain, then point it as Vercel
-instructs — an `A` record to `76.76.21.21` for a root domain, or a `CNAME` to
-`cname.vercel-dns.com` for a subdomain. HTTPS is issued automatically.
+Vercel project → Settings → Domains → add the domain, then point DNS as Vercel
+instructs. HTTPS is issued automatically. Then update the absolute URLs in
+`index.html` (`og:url`, `og:image`, `twitter:image`, `canonical`) — link
+previews ignore relative paths.
 
-## Checks worth doing once it's up
+## Checks worth doing after a change
 
 - Open it on a phone. The background should crop to the lamp and the boy, with
-  the wordmark drawn live over it — not letterboxed.
+  the wordmark drawn live over it, and both arrows either side of the Spotify
+  card should be on screen.
 - Confirm the video actually plays and doesn't just sit on the poster frame.
-  iOS needs `muted` + `playsinline`; both are set, but worth seeing.
 - Watch the network tab: the `.webm` (1.7 MB) should be what loads, with the
   `.mp4` (4.0 MB) only on Safari.
-- Share the URL into a chat to see the OG preview card pull `media/poster.jpg`.
+- Share the URL into a chat to see the preview card pull `media/og.jpg`.
