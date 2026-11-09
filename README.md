@@ -151,3 +151,9 @@ phones.
 
 Video autoplay needs `muted` + `playsinline`; both are set. Audio can't autoplay
 anywhere, by design — the first play always costs one tap.
+
+## Licence
+
+[MIT](LICENSE) © 2026 Samarth Jaiswal
+
+The MIT licence covers the source code. Images, video and other media in this repository are not covered.
